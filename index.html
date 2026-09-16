@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Painel · Punto Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-emoji">🚗</div>
+      <div class="brand-text"><b>Punto Tracker</b><span>Fiat Punto Preto</span></div>
+    </div>
+    <div class="sync-pill" id="syncPill" data-state="off"><span class="sync-dot"></span><span id="syncPillText">Local</span></div>
+    <a class="nav-link" href="index.html"><span class="ic">📊</span> Painel</a>
+    <a class="nav-link" href="pagamentos.html"><span class="ic">🧾</span> Pagamentos</a>
+    <div class="sidebar-footer" id="sidebarFooter">carnê pessoal</div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Painel</h1>
+        <p id="subtitle">Acompanhamento do financiamento</p>
+      </div>
+      <div class="tag-row">
+        <button class="btn btn-ghost" id="btnToggleConfig">⚙️ Configurações</button>
+        <button class="btn btn-ghost" id="btnSyncNow" style="display:none;">🔄 Sincronizar</button>
+      </div>
+    </div>
+
+    <div id="dashboard"></div>
+
+    <div id="config" style="display:none;">
+      <div class="card">
+        <div class="section-title">🚘 Veículo</div>
+        <div class="field-row">
+          <div class="field"><label>Modelo</label><input type="text" id="fModelo" placeholder="Fiat Punto" /></div>
+          <div class="field"><label>Cor</label><input type="text" id="fCor" placeholder="Preto" /></div>
+        </div>
+        <div class="field"><label>Apelido (opcional)</label><input type="text" id="fApelido" placeholder="ex: Pretinho" /></div>
+        <button class="btn btn-navy" id="btnSalvarVeiculo">Salvar veículo</button>
+      </div>
+
+      <div class="card">
+        <div class="section-title">📋 Carnê</div>
+        <div class="section-sub">Depois de gerar, marque os pagamentos em Pagamentos.</div>
+        <div class="field-row">
+          <div class="field"><label>Nº de parcelas</label><input type="number" id="fTotal" value="36" min="1" max="120" /></div>
+          <div class="field"><label>Valor da parcela (R$)</label><input type="number" step="0.01" id="fValor" placeholder="0,00" /></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Data da 1ª parcela</label><input type="date" id="fInicio" /></div>
+          <div class="field"><label>Dia de vencimento</label><input type="number" id="fDia" min="1" max="31" placeholder="10" /></div>
+        </div>
+        <button class="btn btn-gold" id="btnGerarParcelas">🔄 Gerar / atualizar parcelas</button>
+      </div>
+
+      <div class="card" id="syncCard"></div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="ic">📊</span>Painel</a>
+    <a href="pagamentos.html"><span class="ic">🧾</span>Pagamentos</a>
+  </nav>
+</div>
+
+<script src="js/vendor/three.min.js"></script>
+<script src="js/vendor/GLTFLoader.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/car3d.js"></script>
+<script src="js/painel.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Pagamentos · Punto Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-emoji">🚗</div>
+      <div class="brand-text"><b>Punto Tracker</b><span>Fiat Punto Preto</span></div>
+    </div>
+    <div class="sync-pill" id="syncPill" data-state="off"><span class="sync-dot"></span><span id="syncPillText">Local</span></div>
+    <a class="nav-link" href="index.html"><span class="ic">📊</span> Painel</a>
+    <a class="nav-link" href="pagamentos.html"><span class="ic">🧾</span> Pagamentos</a>
+    <div class="sidebar-footer" id="sidebarFooter">carnê pessoal</div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1>Pagamentos</h1>
+        <p id="subtitle">Todas as parcelas do carnê</p>
+      </div>
+    </div>
+
+    <div class="tag-row" id="filterRow" style="margin-bottom:16px;">
+      <span class="chip active" data-filter="todas">Todas</span>
+      <span class="chip" data-filter="pendente">Pendentes</span>
+      <span class="chip" data-filter="pago">Pagas</span>
+      <span class="chip" data-filter="atrasado">Em atraso</span>
+    </div>
+
+    <div id="content"></div>
+  </main>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><span class="ic">📊</span>Painel</a>
+    <a href="pagamentos.html"><span class="ic">🧾</span>Pagamentos</a>
+  </nav>
+</div>
+
+<!-- lightbox simples pra ver o comprovante -->
+<div class="modal-backdrop" id="lightbox" style="display:none;">
+  <div class="modal" style="text-align:center;">
+    <div id="lightboxBody"></div>
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn btn-ghost" id="btnFecharLightbox">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="hiddenFileInput" accept="image/*,application/pdf" style="display:none;" />
+
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/pagamentos.js"></script>
+</body>
+</html>
