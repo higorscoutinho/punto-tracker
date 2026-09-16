@@ -3,21 +3,78 @@
 // ==========================================================================
 
 let scene3d = null;
+let dashboardMode = null; // null | 'empty' | 'full' — tracks which skeleton is currently in the DOM
 
 function renderDashboard() {
   const data = getData();
   const el = document.getElementById('dashboard');
 
   if (!data.financiamento.configurado || !data.parcelas.length) {
-    el.innerHTML = `
-      <div class="card empty-state">
-        <div class="emoji">🚗</div>
-        <h3 style="margin:0 0 6px;">Vamos configurar seu carnê</h3>
-        <p style="margin:0 0 18px;">Abra "Configurações" acima e cadastre o valor da parcela, a data de início e o número de parcelas.</p>
-      </div>`;
+    if (dashboardMode !== 'empty') {
+      if (scene3d) { scene3d.destroy(); scene3d = null; }
+      el.innerHTML = `
+        <div class="card empty-state">
+          <div class="emoji">🚗</div>
+          <h3 style="margin:0 0 6px;">Vamos configurar seu carnê</h3>
+          <p style="margin:0 0 18px;">Abra "Configurações" acima e cadastre o valor da parcela, a data de início e o número de parcelas.</p>
+        </div>`;
+      dashboardMode = 'empty';
+    }
     return;
   }
 
+  if (dashboardMode !== 'full') {
+    el.innerHTML = `
+      <div class="card progress-card" style="margin-bottom:20px;">
+        <div class="progress-card-top">
+          <div class="progress-card-info">
+            <div class="section-title">Progresso do financiamento</div>
+            <div class="section-sub" id="dashProgressSub">—</div>
+            <div class="progress-wrap">
+              <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+              <div class="progress-pct" id="progressPct">0%</div>
+            </div>
+          </div>
+          <div class="progress-icon" id="carIcon" title="Anda conforme você paga as parcelas"></div>
+        </div>
+      </div>
+
+      <div class="grid-stats">
+        <div class="stat-card">
+          <div class="stat-label">💰 Valor pago</div>
+          <div class="stat-value" id="statValorPago">—</div>
+          <div class="stat-sub" id="statValorTotalSub">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">🏁 Falta pagar</div>
+          <div class="stat-value" id="statValorRestante">—</div>
+          <div class="stat-sub" id="statParcelasRestantesSub">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">📅 Próxima parcela</div>
+          <div class="stat-value" id="statProxima" style="font-size:16px;">—</div>
+          <div class="stat-sub" id="statProximaSub">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">⚠️ Em atraso</div>
+          <div class="stat-value" id="statAtrasadas">0</div>
+          <div class="stat-sub" id="statAtrasadasSub">tudo em dia</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <a href="pagamentos.html" class="btn btn-navy">🧾 Ver todas as parcelas</a>
+      </div>
+    `;
+    dashboardMode = 'full';
+    const container = document.getElementById('carIcon');
+    scene3d = createPuntoIcon(container, {});
+  }
+
+  updateDashboardValues(data);
+}
+
+function updateDashboardValues(data) {
   const stats = computeStats(data);
   const v = data.veiculo;
 
@@ -29,57 +86,22 @@ function renderDashboard() {
     ? `${fmtDate(stats.proxima.vencimento)} · ${fmtBRL(stats.proxima.valor)}`
     : 'Tudo pago 🎉';
 
-  el.innerHTML = `
-    <div class="scene-card">
-      <div id="carScene" style="width:100%;height:100%;"></div>
-      <div class="scene-overlay">
-        <span class="scene-badge">${stats.pagas}/${stats.total} parcelas pagas</span>
-        <span class="scene-badge">${stats.pct}%</span>
-      </div>
-      <span class="scene-caption">${v.modelo || 'Fiat Punto'} ${v.cor || 'Preto'} — decorativo 🎉</span>
-    </div>
+  document.getElementById('dashProgressSub').textContent = `${stats.pagas} de ${stats.total} parcelas quitadas`;
+  document.getElementById('progressFill').style.width = stats.pct + '%';
+  document.getElementById('progressPct').textContent = stats.pct + '%';
 
-    <div class="card" style="margin-bottom:20px;">
-      <div class="section-title">Progresso do financiamento</div>
-      <div class="section-sub">${stats.pagas} de ${stats.total} parcelas quitadas</div>
-      <div class="progress-wrap">
-        <div class="progress-track"><div class="progress-fill" style="width:${stats.pct}%"></div></div>
-        <div class="progress-pct">${stats.pct}%</div>
-      </div>
-    </div>
+  document.getElementById('statValorPago').textContent = fmtBRL(stats.valorPago);
+  document.getElementById('statValorTotalSub').textContent = `de ${fmtBRL(stats.valorTotal)}`;
+  document.getElementById('statValorRestante').textContent = fmtBRL(stats.valorRestante);
+  document.getElementById('statParcelasRestantesSub').textContent = `${stats.total - stats.pagas} parcela(s)`;
+  document.getElementById('statProxima').textContent = proximaTxt;
+  document.getElementById('statProximaSub').textContent = stats.proxima ? 'Nº ' + stats.proxima.numero : '—';
+  const atrasadasEl = document.getElementById('statAtrasadas');
+  atrasadasEl.textContent = stats.atrasadas;
+  atrasadasEl.style.color = stats.atrasadas ? 'var(--red)' : 'inherit';
+  document.getElementById('statAtrasadasSub').textContent = stats.atrasadas ? 'verifique em Pagamentos' : 'tudo em dia';
 
-    <div class="grid-stats">
-      <div class="stat-card">
-        <div class="stat-label">💰 Valor pago</div>
-        <div class="stat-value">${fmtBRL(stats.valorPago)}</div>
-        <div class="stat-sub">de ${fmtBRL(stats.valorTotal)}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🏁 Falta pagar</div>
-        <div class="stat-value">${fmtBRL(stats.valorRestante)}</div>
-        <div class="stat-sub">${stats.total - stats.pagas} parcela(s)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">📅 Próxima parcela</div>
-        <div class="stat-value" style="font-size:16px;">${proximaTxt}</div>
-        <div class="stat-sub">${stats.proxima ? 'Nº ' + stats.proxima.numero : '—'}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">⚠️ Em atraso</div>
-        <div class="stat-value" style="color:${stats.atrasadas ? 'var(--red)' : 'inherit'}">${stats.atrasadas}</div>
-        <div class="stat-sub">${stats.atrasadas ? 'verifique em Pagamentos' : 'tudo em dia'}</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <a href="pagamentos.html" class="btn btn-navy">🧾 Ver todas as parcelas</a>
-    </div>
-  `;
-
-  const container = document.getElementById('carScene');
-  if (scene3d) scene3d.destroy();
-  scene3d = createPuntoScene(container, { totalParcelas: stats.total || 36 });
-  scene3d.setProgress(stats.pct);
+  if (scene3d) scene3d.setProgress(stats.pct);
 }
 
 // ---------- settings (config section) ----------
@@ -220,6 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('pt:data-changed', () => { renderDashboard(); fillConfigForm(); });
   window.addEventListener('pt:sync-status', renderSyncCard);
+
+  // Cross-tab liveliness: if Painel and Pagamentos are open in two tabs on the
+  // same device, a payment marked in one updates the icon/progress in the other.
+  window.addEventListener('storage', (e) => {
+    if (e.key === DATA_KEY) { renderDashboard(); fillConfigForm(); }
+  });
 
   const data = getData();
   const configEl = document.getElementById('config');

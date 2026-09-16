@@ -310,53 +310,28 @@ button { font-family: inherit; }
   text-align: right;
 }
 
-/* ---------- 3D scene card ---------- */
-.scene-card {
-  position: relative;
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--line);
-  background: linear-gradient(180deg, #cfe0f5 0%, #eaf1fb 38%, #dfe6ee 39%, #b9c3cf 100%);
-  height: 320px;
-  margin-bottom: 20px;
-}
-
-.scene-card canvas { display: block; width: 100%; height: 100%; }
-
-.scene-overlay {
-  position: absolute;
-  left: 18px;
-  top: 16px;
-  right: 18px;
+/* ---------- progress card + car icon ---------- */
+.progress-card-top {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  pointer-events: none;
+  gap: 18px;
 }
 
-.scene-badge {
-  background: rgba(15,23,42,.72);
-  color: #f4e9c9;
-  font-weight: 700;
-  font-size: 12.5px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  backdrop-filter: blur(4px);
+.progress-card-info { flex: 1; min-width: 0; }
+
+.progress-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 128px;
+  height: 104px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #eef3fb 0%, #e3e9f2 100%);
+  border: 1px solid var(--line);
+  overflow: hidden;
 }
 
-.scene-caption {
-  position: absolute;
-  right: 16px;
-  bottom: 14px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: rgba(15,23,42,.55);
-  background: rgba(255,255,255,.55);
-  padding: 4px 10px;
-  border-radius: 999px;
-  backdrop-filter: blur(4px);
-}
+.progress-icon canvas { display: block; width: 100%; height: 100%; }
 
 /* ---------- Table / list of parcelas ---------- */
 .parcelas-list {
@@ -626,7 +601,8 @@ button { font-family: inherit; }
 
 @media (max-width: 480px) {
   .grid-stats { grid-template-columns: 1fr 1fr; }
-  .scene-card { height: 240px; }
+  .progress-card-top { gap: 12px; }
+  .progress-icon { width: 100px; height: 82px; }
 }
 
 .empty-state {

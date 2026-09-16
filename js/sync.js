@@ -247,6 +247,28 @@ const PTSync = (() => {
     }
   }
 
+  // ---------- "just works" cross-device feel ----------
+  // Whenever this tab becomes the active one again (you switch back from
+  // another app, unlock the phone, alt-tab to the PC, or the page first
+  // loads), quietly pull the latest data — so you never have to remember to
+  // hit "Sincronizar" by hand. Throttled so flipping tabs quickly doesn't
+  // hammer the GitHub API.
+  let lastAutoPull = 0;
+  const AUTO_PULL_MIN_INTERVAL = 15000; // 15s
+
+  function maybeAutoPull() {
+    if (!isConfigured()) return;
+    if (document.hidden) return;
+    const now = Date.now();
+    if (now - lastAutoPull < AUTO_PULL_MIN_INTERVAL) return;
+    lastAutoPull = now;
+    pull().catch(() => { /* keep local data, banner will show error */ });
+  }
+
+  document.addEventListener('visibilitychange', maybeAutoPull);
+  window.addEventListener('focus', maybeAutoPull);
+  window.addEventListener('pageshow', maybeAutoPull);
+
   return {
     isConfigured, getConfig, getStatus, testToken,
     connectNew, connectExisting, disconnect,

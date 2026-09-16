@@ -1,17 +1,18 @@
 # 🚗 Punto Tracker
 
 Site simples para acompanhar o carnê de 36x do Fiat Punto Preto: progresso,
-parcelas, comprovantes e um carrinho 3D que anda pela estrada conforme você
-vai pagando. Tudo em HTML/CSS/JS puro — sem build, sem servidor, dá pra
+parcelas, comprovantes e um carrinho 3D — um ícone bem pequeno, parado,
+que só se mexe (dá um "pulinho" pra frente) quando você marca uma parcela
+como paga. Tudo em HTML/CSS/JS puro — sem build, sem servidor, dá pra
 hospedar de graça no GitHub Pages.
 
 ## Como funciona
 
 Só duas páginas:
 
-- **Painel** (`index.html`) — progresso geral, a cena 3D do carro e, atrás do
-  botão "⚙️ Configurações", os dados do veículo, a geração das parcelas e a
-  sincronização entre aparelhos.
+- **Painel** (`index.html`) — progresso geral (com o carrinho-ícone ao lado
+  da barra) e, atrás do botão "⚙️ Configurações", os dados do veículo, a
+  geração das parcelas e a sincronização entre aparelhos.
 - **Pagamentos** (`pagamentos.html`) — lista das 36 parcelas. Clique em
   "Marcar pago" pra quitar (fica pago na hora, sem confirmação extra) ou no
   ícone da câmera pra anexar/ver o comprovante.
@@ -19,7 +20,10 @@ Só duas páginas:
 Os dados ficam salvos no `localStorage` do navegador. Se você quiser acessar
 do celular e do computador ao mesmo tempo, dá pra ligar uma sincronização
 opcional que usa um **Gist privado do GitHub** como "banco de dados" pessoal
-— sem precisar de servidor nenhum.
+— sem precisar de servidor nenhum. Com a sincronização ligada, o site já
+busca os dados mais recentes sozinho sempre que você volta pra aba (troca de
+app no celular, destrava a tela, alt-tab no PC) — não precisa lembrar de
+apertar "Sincronizar" toda vez.
 
 ## Publicando no GitHub Pages
 
@@ -81,13 +85,16 @@ nada.
 
 - **Cores/estilo**: tudo centralizado em `css/style.css`, nas variáveis do
   `:root` (`--navy-900`, `--gold`, etc.).
-- **O carrinho 3D**: agora é o modelo real do Fiat Punto
+- **O carrinho 3D**: é o modelo real do Fiat Punto
   (`assets/models/fiat-punto.glb`, modelo de bimboit34 no Sketchfab, licença
-  CC-BY-4.0), repintado de preto no próprio arquivo. Se o modelo não carregar
-  por algum motivo, `js/car3d.js` cai automaticamente num carrinho simples
-  feito só de formas geométricas, pra nunca ficar com a pista vazia. Dá pra
-  ajustar tamanho da pista, quantos marcos aparecem etc. mexendo nesse
-  arquivo.
+  CC-BY-4.0), repintado de preto no próprio arquivo, mostrado como um ícone
+  pequeno e parado (rodas não giram, sem câmera girando ao redor) — ele só
+  anima quando o progresso muda: dá um pulinho pra frente na "pista" curta
+  dentro do próprio card, e solta uma chuvinha de confetes quando chega em
+  100%. Se o modelo não carregar por algum motivo, `js/car3d.js` cai
+  automaticamente num carrinho simples feito só de formas geométricas, pra
+  nunca ficar com o ícone vazio. Dá pra ajustar esse comportamento mexendo
+  nesse arquivo (função `createPuntoIcon`).
 - **Créditos do modelo 3D**: "Fiat Punto 2.0" por bimboit34
   (https://sketchfab.com/bimboit34), licença Creative Commons
   Attribution (CC-BY-4.0). Se for publicar o site, vale manter esse crédito
