@@ -2,7 +2,6 @@
 // painel.js — dashboard page + inline settings (vehicle, carnê, sync)
 // ==========================================================================
 
-let scene3d = null;
 let dashboardMode = null; // null | 'empty' | 'full' — tracks which skeleton is currently in the DOM
 
 function renderDashboard() {
@@ -11,7 +10,6 @@ function renderDashboard() {
 
   if (!data.financiamento.configurado || !data.parcelas.length) {
     if (dashboardMode !== 'empty') {
-      if (scene3d) { scene3d.destroy(); scene3d = null; }
       el.innerHTML = `
         <div class="card empty-state">
           <div class="emoji">🚗</div>
@@ -25,17 +23,12 @@ function renderDashboard() {
 
   if (dashboardMode !== 'full') {
     el.innerHTML = `
-      <div class="card progress-card" style="margin-bottom:20px;">
-        <div class="progress-card-top">
-          <div class="progress-card-info">
-            <div class="section-title">Progresso do financiamento</div>
-            <div class="section-sub" id="dashProgressSub">—</div>
-            <div class="progress-wrap">
-              <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-              <div class="progress-pct" id="progressPct">0%</div>
-            </div>
-          </div>
-          <div class="progress-icon" id="carIcon" title="Anda conforme você paga as parcelas"></div>
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-title">Progresso do financiamento</div>
+        <div class="section-sub" id="dashProgressSub">—</div>
+        <div class="progress-wrap">
+          <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+          <div class="progress-pct" id="progressPct">0%</div>
         </div>
       </div>
 
@@ -67,8 +60,6 @@ function renderDashboard() {
       </div>
     `;
     dashboardMode = 'full';
-    const container = document.getElementById('carIcon');
-    scene3d = createPuntoIcon(container, {});
   }
 
   updateDashboardValues(data);
@@ -100,8 +91,6 @@ function updateDashboardValues(data) {
   atrasadasEl.textContent = stats.atrasadas;
   atrasadasEl.style.color = stats.atrasadas ? 'var(--red)' : 'inherit';
   document.getElementById('statAtrasadasSub').textContent = stats.atrasadas ? 'verifique em Pagamentos' : 'tudo em dia';
-
-  if (scene3d) scene3d.setProgress(stats.pct);
 }
 
 // ---------- settings (config section) ----------
@@ -240,11 +229,16 @@ document.addEventListener('DOMContentLoaded', () => {
   fillConfigForm();
   renderSyncCard();
 
+  // A little parked toy car in the corner of the screen — pure decoration,
+  // not tied to the carnê at all. Drag it to spin it around.
+  const carCorner = document.getElementById('carCorner');
+  if (carCorner) createPuntoToy(carCorner);
+
   window.addEventListener('pt:data-changed', () => { renderDashboard(); fillConfigForm(); });
   window.addEventListener('pt:sync-status', renderSyncCard);
 
   // Cross-tab liveliness: if Painel and Pagamentos are open in two tabs on the
-  // same device, a payment marked in one updates the icon/progress in the other.
+  // same device, a payment marked in one updates the dashboard values in the other.
   window.addEventListener('storage', (e) => {
     if (e.key === DATA_KEY) { renderDashboard(); fillConfigForm(); }
   });

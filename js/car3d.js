@@ -1,36 +1,37 @@
 // ==========================================================================
-// car3d.js — a small 3D "Fiat Punto Preto" icon that sits on a short strip
-// and hops forward whenever the paid progress changes. No idle spinning —
-// it's meant to read as a calm icon, not a scene, and only moves in
-// response to something you did (marking a parcela paid).
+// car3d.js — a small 3D "Fiat Punto Preto" toy sitting in the corner of the
+// screen. It does NOT represent progress or any data at all — it's just a
+// decoration, parked and still, that you can grab and spin around with your
+// finger/mouse to look at it, like a little toy on a shelf. Flick it and it
+// keeps spinning for a bit before settling back down.
 // (Three.js r128, global build, no build step needed.)
 // ==========================================================================
 
-function createPuntoIcon(container, opts = {}) {
-  const trackLength = 2.5;
-
+function createPuntoToy(container, opts = {}) {
   let width = container.clientWidth || 160;
   let height = container.clientHeight || 120;
 
   const scene = new THREE.Scene();
   scene.background = null;
 
-  const camera = new THREE.PerspectiveCamera(32, width / height, 0.05, 30);
+  const target = new THREE.Vector3(0, 0.5, 0);
+  const camera = new THREE.PerspectiveCamera(30, width / height, 0.05, 30);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(width, height);
   renderer.setClearColor(0x000000, 0);
   if (THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.domElement.style.touchAction = 'none';
   container.appendChild(renderer.domElement);
 
-  // ---------- lights (no shadow map — this is a tiny icon, not a scene) ----------
+  // ---------- lights (no shadow map — this is a tiny toy, not a scene) ----------
   const hemi = new THREE.HemisphereLight(0xffffff, 0x8f97a3, 0.95);
   scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xfff3d6, 0.85);
+  const sun = new THREE.DirectionalLight(0xfff3d6, 0.9);
   sun.position.set(3, 5, 3);
   scene.add(sun);
-  const fill = new THREE.DirectionalLight(0xcfe0ff, 0.25);
+  const fill = new THREE.DirectionalLight(0xcfe0ff, 0.28);
   fill.position.set(-3, 2, -2);
   scene.add(fill);
 
@@ -39,28 +40,18 @@ function createPuntoIcon(container, opts = {}) {
   shadowCanvas.width = 128; shadowCanvas.height = 128;
   const sctx = shadowCanvas.getContext('2d');
   const grad = sctx.createRadialGradient(64, 64, 4, 64, 64, 64);
-  grad.addColorStop(0, 'rgba(10,15,25,0.38)');
+  grad.addColorStop(0, 'rgba(10,15,25,0.4)');
   grad.addColorStop(1, 'rgba(10,15,25,0)');
   sctx.fillStyle = grad;
   sctx.fillRect(0, 0, 128, 128);
   const shadowTex = new THREE.CanvasTexture(shadowCanvas);
   const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false });
-  const shadowBlob = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.85), shadowMat);
+  const shadowBlob = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 0.75), shadowMat);
   shadowBlob.rotation.x = -Math.PI / 2;
   shadowBlob.position.y = 0.002;
   scene.add(shadowBlob);
 
-  // ---------- thin ground strip (just enough to read as a path) ----------
-  const stripMat = new THREE.MeshStandardMaterial({ color: 0xe4e7ee, roughness: 1 });
-  const strip = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.04, trackLength + 1.1), stripMat);
-  strip.position.set(0, -0.02, -trackLength / 2 + 0.2);
-  scene.add(strip);
-
-  // ---------- the car ----------
-  // Starts as an empty group; the real Fiat Punto model (assets/models/fiat-punto.glb,
-  // repainted black) loads in asynchronously and drops itself in here. If it
-  // can't be loaded for any reason, a simple stylized fallback car is used
-  // instead so the icon never shows up empty. Wheels stay static on purpose.
+  // ---------- the car — parked, still, just sitting there ----------
   const car = new THREE.Group();
   scene.add(car);
   loadRealCar(car);
@@ -79,7 +70,7 @@ function createPuntoIcon(container, opts = {}) {
       (gltf) => {
         try {
           const model = gltf.scene;
-          model.rotation.y = Math.PI; // model's front faces +Z; we drive toward -Z
+          model.rotation.y = Math.PI; // model's front faces +Z; we want it facing -Z (toward viewer's left-ish)
           const scale = 0.025; // model units (~inches) → meters
           model.scale.setScalar(scale);
           model.updateMatrixWorld(true);
@@ -203,152 +194,100 @@ function createPuntoIcon(container, opts = {}) {
     return grp;
   }
 
-  // ---------- camera framing (fixed — no orbiting, this is an icon) ----------
-  function frameCamera() {
-    camera.aspect = width / height;
-    camera.position.set(1.55, 1.05, 1.85);
-    camera.lookAt(0, 0.28, -trackLength * 0.4);
-    camera.updateProjectionMatrix();
-  }
-  frameCamera();
+  // ---------- orbit camera you can grab & spin (drag to rotate, flick for momentum) ----------
+  let radius = 5.6;
+  let theta = Math.PI + 0.62; // azimuth (around Y) — starts on a front 3/4 view
+  let phi = 1.1;              // polar angle (0 = straight above, PI/2 = level with car)
+  const PHI_MIN = 0.55;
+  const PHI_MAX = 1.5;
 
-  // ---------- state + on-demand rendering ----------
-  let progressPct = null; // null until first setProgress call
-  let displayZ = 0;
-  let rafId = null;
-  let sparkles = null;
-  let sparkleUntil = 0;
+  function updateCameraFromSpherical() {
+    camera.position.set(
+      target.x + radius * Math.sin(phi) * Math.sin(theta),
+      target.y + radius * Math.cos(phi),
+      target.z + radius * Math.sin(phi) * Math.cos(theta),
+    );
+    camera.lookAt(target);
+  }
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  updateCameraFromSpherical();
 
   function renderOnce() {
     renderer.render(scene, camera);
   }
 
-  const zFor = (pct) => -((pct / 100) * trackLength);
+  // ---------- drag-to-spin interaction (pointer events unify mouse + touch) ----------
+  const el = renderer.domElement;
+  let dragging = false;
+  let lastX = 0, lastY = 0;
+  let vTheta = 0; // angular velocity from the last drag, used for momentum on release
+  let momentumId = null;
+  const DRAG_SENS = 0.0085;
 
-  function easeOutBack(t) {
-    const c1 = 1.4;
-    const c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  function stopMomentum() {
+    if (momentumId) { cancelAnimationFrame(momentumId); momentumId = null; }
   }
 
-  function runLoop(stepFn) {
-    if (rafId) cancelAnimationFrame(rafId);
-    const start = performance.now();
-    function tick(now) {
-      const done = stepFn(now - start);
+  function onPointerDown(e) {
+    dragging = true;
+    stopMomentum();
+    vTheta = 0;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    el.setPointerCapture(e.pointerId);
+    el.style.cursor = 'grabbing';
+  }
+
+  function onPointerMove(e) {
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    theta += dx * DRAG_SENS;
+    phi = Math.max(PHI_MIN, Math.min(PHI_MAX, phi - dy * DRAG_SENS));
+    vTheta = dx * DRAG_SENS; // remember for the momentum flick on release
+    updateCameraFromSpherical();
+    renderOnce();
+  }
+
+  function onPointerUp(e) {
+    if (!dragging) return;
+    dragging = false;
+    el.style.cursor = 'grab';
+    try { el.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    if (Math.abs(vTheta) > 0.0008) runMomentum();
+  }
+
+  function runMomentum() {
+    stopMomentum();
+    function tick() {
+      vTheta *= 0.955; // friction — the toy gently settles back to a stop
+      theta += vTheta;
+      updateCameraFromSpherical();
       renderOnce();
-      if (!done) {
-        rafId = requestAnimationFrame(tick);
+      if (Math.abs(vTheta) > 0.0004) {
+        momentumId = requestAnimationFrame(tick);
       } else {
-        rafId = null;
+        momentumId = null;
       }
     }
-    rafId = requestAnimationFrame(tick);
+    momentumId = requestAnimationFrame(tick);
   }
 
-  function hopTo(newZ, celebrate) {
-    const fromZ = displayZ;
-    const duration = 700;
-    runLoop((elapsed) => {
-      const t = Math.min(elapsed / duration, 1);
-      const eased = easeOutBack(t);
-      displayZ = fromZ + (newZ - fromZ) * eased;
-      car.position.z = displayZ;
-      // little hop arc + squash on landing
-      const arc = Math.sin(Math.min(t, 1) * Math.PI) * 0.13;
-      car.position.y = arc;
-      const squash = t > 0.92 ? 1 - (1 - t) * 1.2 : 1;
-      car.scale.set(1 + (1 - squash) * 0.06, squash, 1 + (1 - squash) * 0.06);
-      updateSparkles(elapsed);
-      const finished = t >= 1;
-      if (finished) {
-        car.position.y = 0;
-        car.scale.set(1, 1, 1);
-        if (celebrate) spawnSparkles();
-      }
-      return finished && (!sparkles || elapsed > sparkleUntil);
-    });
-  }
-
-  function spawnSparkles() {
-    const count = 46;
-    const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-    const speeds = new Float32Array(count);
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 1.1;
-      positions[i * 3 + 1] = 0.15 + Math.random() * 0.1;
-      positions[i * 3 + 2] = displayZ + (Math.random() - 0.5) * 1.1;
-      speeds[i] = 0.35 + Math.random() * 0.6;
-    }
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const mat = new THREE.PointsMaterial({ color: 0xffd873, size: 0.055, transparent: true, opacity: 0.95 });
-    if (sparkles) scene.remove(sparkles);
-    sparkles = new THREE.Points(geo, mat);
-    scene.add(sparkles);
-    sparkleUntil = performance.now() - performance.now() + 1400; // relative marker, see updateSparkles
-    sparkles.userData.startedAt = performance.now();
-  }
-
-  function updateSparkles() {
-    if (!sparkles) return;
-    const age = performance.now() - sparkles.userData.startedAt;
-    if (age > 1400) {
-      scene.remove(sparkles);
-      sparkles = null;
-      return;
-    }
-    const pos = sparkles.geometry.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      pos.setY(i, pos.getY(i) + 0.012);
-    }
-    pos.needsUpdate = true;
-    sparkles.material.opacity = Math.max(0, 0.95 * (1 - age / 1400));
-  }
-
-  // keep the sparkle fade animating even after the hop itself has settled
-  function tickSparklesUntilDone() {
-    if (!sparkles) return;
-    runLoop((elapsed) => {
-      updateSparkles();
-      return !sparkles;
-    });
-  }
-
-  function setProgress(pct) {
-    const clamped = Math.max(0, Math.min(100, pct));
-    const isFirst = progressPct === null;
-    const wasComplete = progressPct !== null && progressPct >= 100;
-    const nowComplete = clamped >= 100;
-    const newZ = zFor(clamped);
-
-    if (isFirst) {
-      progressPct = clamped;
-      displayZ = newZ;
-      car.position.z = newZ;
-      renderOnce();
-      // small welcome hop in place so it doesn't feel static on first paint
-      hopTo(newZ, false);
-      if (nowComplete) spawnSparkles();
-      tickSparklesUntilDone();
-      return;
-    }
-
-    const changed = Math.abs(newZ - displayZ) > 0.0001;
-    progressPct = clamped;
-    if (changed) {
-      hopTo(newZ, nowComplete && !wasComplete);
-    } else if (nowComplete && !wasComplete) {
-      spawnSparkles();
-      tickSparklesUntilDone();
-    }
-  }
+  el.style.cursor = 'grab';
+  el.addEventListener('pointerdown', onPointerDown);
+  el.addEventListener('pointermove', onPointerMove);
+  el.addEventListener('pointerup', onPointerUp);
+  el.addEventListener('pointercancel', onPointerUp);
 
   function resize() {
     width = container.clientWidth || width;
     height = container.clientHeight || height;
     renderer.setSize(width, height);
-    frameCamera();
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
     renderOnce();
   }
 
@@ -357,12 +296,16 @@ function createPuntoIcon(container, opts = {}) {
   window.addEventListener('resize', resize);
 
   function destroy() {
-    if (rafId) cancelAnimationFrame(rafId);
+    stopMomentum();
     ro.disconnect();
     window.removeEventListener('resize', resize);
+    el.removeEventListener('pointerdown', onPointerDown);
+    el.removeEventListener('pointermove', onPointerMove);
+    el.removeEventListener('pointerup', onPointerUp);
+    el.removeEventListener('pointercancel', onPointerUp);
     renderer.dispose();
     if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
   }
 
-  return { setProgress, destroy };
+  return { destroy };
 }

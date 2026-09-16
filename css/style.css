@@ -310,28 +310,22 @@ button { font-family: inherit; }
   text-align: right;
 }
 
-/* ---------- progress card + car icon ---------- */
-.progress-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+/* ---------- the toy car parked in the corner ---------- */
+/* No card, no border, no background — it just sits directly on the page,
+   like a little toy, and you can drag it to spin it around. */
+.car-corner {
+  position: fixed;
+  right: 14px;
+  bottom: 22px;
+  width: 176px;
+  height: 138px;
+  z-index: 30;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 }
 
-.progress-card-info { flex: 1; min-width: 0; }
-
-.progress-icon {
-  position: relative;
-  flex-shrink: 0;
-  width: 128px;
-  height: 104px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #eef3fb 0%, #e3e9f2 100%);
-  border: 1px solid var(--line);
-  overflow: hidden;
-}
-
-.progress-icon canvas { display: block; width: 100%; height: 100%; }
+.car-corner canvas { display: block; width: 100%; height: 100%; }
 
 /* ---------- Table / list of parcelas ---------- */
 .parcelas-list {
@@ -597,12 +591,12 @@ button { font-family: inherit; }
     row-gap: 8px;
   }
   .row-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  .car-corner { bottom: 78px; right: 8px; width: 140px; height: 110px; }
 }
 
 @media (max-width: 480px) {
   .grid-stats { grid-template-columns: 1fr 1fr; }
-  .progress-card-top { gap: 12px; }
-  .progress-icon { width: 100px; height: 82px; }
+  .car-corner { width: 118px; height: 94px; }
 }
 
 .empty-state {

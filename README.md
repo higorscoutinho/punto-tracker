@@ -1,18 +1,19 @@
 # 🚗 Punto Tracker
 
 Site simples para acompanhar o carnê de 36x do Fiat Punto Preto: progresso,
-parcelas, comprovantes e um carrinho 3D — um ícone bem pequeno, parado,
-que só se mexe (dá um "pulinho" pra frente) quando você marca uma parcela
-como paga. Tudo em HTML/CSS/JS puro — sem build, sem servidor, dá pra
-hospedar de graça no GitHub Pages.
+parcelas, comprovantes e um carrinho 3D de enfeite, parado no canto da tela,
+que você arrasta pra girar e ver de todos os ângulos — só uma graça, sem
+ligação nenhuma com o carnê. Tudo em HTML/CSS/JS puro — sem build, sem
+servidor, dá pra hospedar de graça no GitHub Pages.
 
 ## Como funciona
 
 Só duas páginas:
 
-- **Painel** (`index.html`) — progresso geral (com o carrinho-ícone ao lado
-  da barra) e, atrás do botão "⚙️ Configurações", os dados do veículo, a
-  geração das parcelas e a sincronização entre aparelhos.
+- **Painel** (`index.html`) — progresso geral e, atrás do botão
+  "⚙️ Configurações", os dados do veículo, a geração das parcelas e a
+  sincronização entre aparelhos. O carrinho 3D fica sempre parado no canto
+  da tela, decorativo.
 - **Pagamentos** (`pagamentos.html`) — lista das 36 parcelas. Clique em
   "Marcar pago" pra quitar (fica pago na hora, sem confirmação extra) ou no
   ícone da câmera pra anexar/ver o comprovante.
@@ -87,14 +88,16 @@ nada.
   `:root` (`--navy-900`, `--gold`, etc.).
 - **O carrinho 3D**: é o modelo real do Fiat Punto
   (`assets/models/fiat-punto.glb`, modelo de bimboit34 no Sketchfab, licença
-  CC-BY-4.0), repintado de preto no próprio arquivo, mostrado como um ícone
-  pequeno e parado (rodas não giram, sem câmera girando ao redor) — ele só
-  anima quando o progresso muda: dá um pulinho pra frente na "pista" curta
-  dentro do próprio card, e solta uma chuvinha de confetes quando chega em
-  100%. Se o modelo não carregar por algum motivo, `js/car3d.js` cai
-  automaticamente num carrinho simples feito só de formas geométricas, pra
-  nunca ficar com o ícone vazio. Dá pra ajustar esse comportamento mexendo
-  nesse arquivo (função `createPuntoIcon`).
+  CC-BY-4.0), repintado de preto no próprio arquivo, mostrado como um
+  carrinho de enfeite parado no canto inferior direito da tela — sem card,
+  sem fundo, só ele mesmo flutuando ali. Não representa progresso nem nada
+  do carnê: é só pra ser bonito. Clique e arraste (ou passe o dedo, no
+  celular) pra girar a câmera ao redor dele e ver de outros ângulos; solte
+  com um "flick" rápido e ele continua girando um pouco antes de parar,
+  feito um pião. Se o modelo não carregar por algum motivo, `js/car3d.js`
+  cai automaticamente num carrinho simples feito só de formas geométricas,
+  pra nunca ficar sem o carrinho. Dá pra ajustar esse comportamento mexendo
+  nesse arquivo (função `createPuntoToy`).
 - **Créditos do modelo 3D**: "Fiat Punto 2.0" por bimboit34
   (https://sketchfab.com/bimboit34), licença Creative Commons
   Attribution (CC-BY-4.0). Se for publicar o site, vale manter esse crédito
