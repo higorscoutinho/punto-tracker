@@ -316,7 +316,7 @@ button { font-family: inherit; }
 .car-corner {
   position: fixed;
   right: 14px;
-  bottom: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom));
   width: 176px;
   height: 138px;
   z-index: 30;
@@ -583,7 +583,7 @@ button { font-family: inherit; }
 @media (max-width: 860px) {
   .sidebar { display: none; }
   .bottom-nav { display: flex; }
-  .main { padding: 20px 16px 90px; max-width: 100%; }
+  .main { padding: 20px 16px calc(90px + env(safe-area-inset-bottom)); max-width: 100%; }
   .grid-stats { grid-template-columns: 1fr 1fr; }
   .field-row { grid-template-columns: 1fr; }
   .parcela-row {
@@ -591,7 +591,7 @@ button { font-family: inherit; }
     row-gap: 8px;
   }
   .row-actions { grid-column: 1 / -1; justify-content: flex-end; }
-  .car-corner { bottom: 78px; right: 8px; width: 140px; height: 110px; }
+  .car-corner { bottom: calc(78px + env(safe-area-inset-bottom)); right: 8px; width: 140px; height: 110px; }
 }
 
 @media (max-width: 480px) {
