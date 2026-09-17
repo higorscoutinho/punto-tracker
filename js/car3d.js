@@ -105,9 +105,9 @@ function createPuntoToy(container, opts = {}) {
   function buildFallbackCar() {
     const grp = new THREE.Group();
     const body = new THREE.MeshStandardMaterial({ color: 0x101114, metalness: 0.65, roughness: 0.3 });
-    const glass = new THREE.MeshStandardMaterial({ color: 0x1c2836, metalness: 0.2, roughness: 0.08, transparent: true, opacity: 0.88 });
+    const glass = new THREE.MeshStandardMaterial({ color: 0x3a4757, metalness: 0.15, roughness: 0.08, transparent: true, opacity: 0.55 });
     const trim = new THREE.MeshStandardMaterial({ color: 0x0c0c0e, metalness: 0.4, roughness: 0.6 });
-    const rim = new THREE.MeshStandardMaterial({ color: 0xc7c9cf, metalness: 0.85, roughness: 0.25 });
+    const rim = new THREE.MeshStandardMaterial({ color: 0x27272c, metalness: 0.75, roughness: 0.32 });
     const tire = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.85 });
     const headlight = new THREE.MeshStandardMaterial({ color: 0xfff6d9, emissive: 0xffe9a8, emissiveIntensity: 0.55 });
     const taillight = new THREE.MeshStandardMaterial({ color: 0xaa1414, emissive: 0x660000, emissiveIntensity: 0.4 });
@@ -245,9 +245,9 @@ function createPuntoToy(container, opts = {}) {
     const dy = e.clientY - lastY;
     lastX = e.clientX;
     lastY = e.clientY;
-    theta += dx * DRAG_SENS;
+    theta -= dx * DRAG_SENS; // drag right -> the near side turns to follow your finger, like spinning a toy in your hand
     phi = Math.max(PHI_MIN, Math.min(PHI_MAX, phi - dy * DRAG_SENS));
-    vTheta = dx * DRAG_SENS; // remember for the momentum flick on release
+    vTheta = -dx * DRAG_SENS; // remember for the momentum flick on release
     updateCameraFromSpherical();
     renderOnce();
   }
