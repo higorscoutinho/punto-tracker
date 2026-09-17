@@ -71,6 +71,7 @@ function generateParcelas({ count, valor, dataInicio, vencimentoDia }, existing 
       dataPagamento: prev ? prev.dataPagamento || null : null,
       temComprovante: prev ? !!prev.temComprovante : false,
       comprovanteTipo: prev ? prev.comprovanteTipo || null : null, // 'imagem' | 'pdf'
+      linhaDigitavel: prev ? prev.linhaDigitavel || null : null, // código do boleto (só dígitos), pra copiar e pagar no banco
     });
   }
   return list;
@@ -105,6 +106,28 @@ function mergeIncoming(local, incoming) {
     parcelas: Array.isArray(incoming.parcelas) && incoming.parcelas.length ? incoming.parcelas : local.parcelas,
     atualizadoEm: incoming.atualizadoEm || local.atualizadoEm,
   };
+}
+
+// Bulk-import boleto "linha digitável" codes pasted from a carnê, one per
+// line, formatted as "<nº da parcela> <código>" (dots/spaces in the code are
+// ignored). Only touches parcelas that already exist; everything else about
+// the parcela (pago, comprovante, etc.) is left alone.
+function importarLinhasDigitaveis(data, text) {
+  const lines = String(text || '').split('\n');
+  let applied = 0;
+  let skipped = 0;
+  lines.forEach((line) => {
+    const m = line.match(/^\s*(\d{1,3})\D/);
+    if (!m) { if (line.trim()) skipped++; return; }
+    const numero = Number(m[1]);
+    const digits = line.slice(m[0].length - 1).replace(/\D/g, '');
+    if (digits.length < 40 || digits.length > 48) { skipped++; return; }
+    const p = data.parcelas.find((x) => x.numero === numero);
+    if (!p) { skipped++; return; }
+    p.linhaDigitavel = digits;
+    applied++;
+  });
+  return { applied, skipped };
 }
 
 // ---------- Receipt (comprovante) bytes — kept out of the main JSON so

@@ -55,6 +55,7 @@ function render() {
         </div>
         <span class="badge ${st}">${statusLabel(st)}</span>
         <div class="row-actions">
+          <button class="icon-btn" data-action="boleto" data-num="${p.numero}" title="${p.linhaDigitavel ? 'Copiar código do boleto' : 'Adicionar código do boleto'}">🧾</button>
           <button class="icon-btn" data-action="comprovante" data-num="${p.numero}" title="${receiptTitle}">${receiptIcon}</button>
           ${payBtn}
         </div>
@@ -85,6 +86,76 @@ function desfazerPagamento(numero) {
   saveData(data);
   toast(`Pagamento da parcela ${numero} desfeito.`);
   render();
+}
+
+// ---------- boleto: código de barras (linha digitável) — ver/copiar ou colar ----------
+function formatLinhaDigitavel(code) {
+  return code.replace(/(.{5})/g, '$1 ').trim();
+}
+
+function onBoletoClick(numero) {
+  const data = getData();
+  const p = findParcela(data, numero);
+  if (!p) return;
+  document.getElementById('boletoModalTitle').textContent = `Boleto da parcela ${p.numero}`;
+  if (p.linhaDigitavel) {
+    renderBoletoView(p);
+  } else {
+    renderBoletoPasteForm(p);
+  }
+  document.getElementById('boletoModal').style.display = 'flex';
+}
+
+function renderBoletoView(p) {
+  const body = document.getElementById('boletoModalBody');
+  body.innerHTML = `
+    <p style="margin:0 0 10px;">Cole esse código no app do seu banco (pagar boleto → digitar código) pra pagar direto.</p>
+    <div class="linha-digitavel">${formatLinhaDigitavel(p.linhaDigitavel)}</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnFecharBoleto">Fechar</button>
+      <button class="btn btn-ghost" id="btnEditarBoleto">Colar novo código</button>
+      <button class="btn btn-navy" id="btnCopiarBoleto">📋 Copiar código</button>
+    </div>`;
+  document.getElementById('btnFecharBoleto').onclick = () => { document.getElementById('boletoModal').style.display = 'none'; };
+  document.getElementById('btnEditarBoleto').onclick = () => renderBoletoPasteForm(p);
+  document.getElementById('btnCopiarBoleto').onclick = () => copyBoletoCode(p.linhaDigitavel);
+}
+
+function renderBoletoPasteForm(p) {
+  const body = document.getElementById('boletoModalBody');
+  body.innerHTML = `
+    <p style="margin:0 0 10px;">Cole aqui a linha digitável (os números) do boleto dessa parcela.</p>
+    <input type="text" id="linhaInput" placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000" style="width:100%;box-sizing:border-box;" />
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnCancelarBoleto">Cancelar</button>
+      <button class="btn btn-navy" id="btnSalvarBoleto">Salvar</button>
+    </div>`;
+  document.getElementById('btnCancelarBoleto').onclick = () => { document.getElementById('boletoModal').style.display = 'none'; };
+  document.getElementById('btnSalvarBoleto').onclick = () => salvarBoletoCode(p.numero);
+  document.getElementById('linhaInput').focus();
+}
+
+function salvarBoletoCode(numero) {
+  const input = document.getElementById('linhaInput');
+  const digits = (input.value || '').replace(/\D/g, '');
+  if (digits.length < 40 || digits.length > 48) return toast('Isso não parece um código de boleto válido.', 'error');
+  const data = getData();
+  const p = findParcela(data, numero);
+  if (!p) return;
+  p.linhaDigitavel = digits;
+  saveData(data);
+  toast('Código salvo ✅', 'success');
+  document.getElementById('boletoModal').style.display = 'none';
+  render();
+}
+
+async function copyBoletoCode(code) {
+  try {
+    await navigator.clipboard.writeText(code);
+    toast('Código copiado! Cole no app do seu banco.', 'success');
+  } catch (e) {
+    toast('Não consegui copiar automaticamente — selecione o código na tela.', 'error');
+  }
 }
 
 // ---------- comprovante: paperclip = ver (se existe) ou anexar (se não) ----------
@@ -192,6 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (action === 'pagar') marcarPago(numero);
     if (action === 'desfazer') desfazerPagamento(numero);
     if (action === 'comprovante') onComprovanteClick(numero);
+    if (action === 'boleto') onBoletoClick(numero);
+  });
+
+  document.getElementById('boletoModal').addEventListener('click', (e) => {
+    if (e.target.id === 'boletoModal') e.target.style.display = 'none';
   });
 
   document.getElementById('hiddenFileInput').addEventListener('change', (e) => {

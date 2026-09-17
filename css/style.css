@@ -503,6 +503,19 @@ button { font-family: inherit; }
 .modal .modal-sub { font-size: 13px; color: var(--muted); margin: 0 0 18px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 
+.linha-digitavel {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  word-break: break-all;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: var(--ink);
+}
+
 .receipt-preview {
   border-radius: 12px;
   overflow: hidden;

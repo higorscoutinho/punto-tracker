@@ -134,6 +134,31 @@ function gerarParcelas() {
   document.getElementById('config').style.display = 'none';
 }
 
+function renderBoletosSub() {
+  const data = getData();
+  const el = document.getElementById('boletosSub');
+  if (!el) return;
+  const total = data.parcelas.length;
+  const comCodigo = data.parcelas.filter((p) => p.linhaDigitavel).length;
+  el.textContent = total
+    ? `${comCodigo} de ${total} parcelas já têm o código salvo. Cole abaixo os que faltam, um por linha ("nº código").`
+    : 'Gere as parcelas primeiro. Depois cole aqui os códigos (linha digitável) dos boletos, um por linha ("nº código").';
+}
+
+function importarBoletos() {
+  const textarea = document.getElementById('fBoletos');
+  const texto = textarea.value.trim();
+  if (!texto) return toast('Cole os códigos primeiro.', 'error');
+  const data = getData();
+  if (!data.parcelas.length) return toast('Gere as parcelas antes de importar os códigos.', 'error');
+  const { applied, skipped } = importarLinhasDigitaveis(data, texto);
+  if (!applied) return toast('Não reconheci nenhum código nesse texto.', 'error');
+  saveData(data);
+  textarea.value = '';
+  toast(`${applied} código(s) importado(s)${skipped ? `, ${skipped} linha(s) ignorada(s)` : ''} ✅`, 'success');
+  renderBoletosSub();
+}
+
 function renderSyncCard() {
   const card = document.getElementById('syncCard');
   const status = PTSync.getStatus();
@@ -227,6 +252,7 @@ function renderSyncCard() {
 document.addEventListener('DOMContentLoaded', () => {
   renderDashboard();
   fillConfigForm();
+  renderBoletosSub();
   renderSyncCard();
 
   // A little parked toy car in the corner of the screen — pure decoration,
@@ -234,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const carCorner = document.getElementById('carCorner');
   if (carCorner) createPuntoToy(carCorner);
 
-  window.addEventListener('pt:data-changed', () => { renderDashboard(); fillConfigForm(); });
+  window.addEventListener('pt:data-changed', () => { renderDashboard(); fillConfigForm(); renderBoletosSub(); });
   window.addEventListener('pt:sync-status', renderSyncCard);
 
   // Cross-tab liveliness: if Painel and Pagamentos are open in two tabs on the
@@ -253,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnSalvarVeiculo').addEventListener('click', salvarVeiculo);
   document.getElementById('btnGerarParcelas').addEventListener('click', gerarParcelas);
+  document.getElementById('btnImportarBoletos').addEventListener('click', importarBoletos);
 
   document.getElementById('btnSyncNow').addEventListener('click', async () => {
     try {

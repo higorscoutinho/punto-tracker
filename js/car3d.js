@@ -15,7 +15,7 @@ function createPuntoToy(container, opts = {}) {
   scene.background = null;
 
   const target = new THREE.Vector3(0, 0.5, 0);
-  const camera = new THREE.PerspectiveCamera(30, width / height, 0.05, 30);
+  const camera = new THREE.PerspectiveCamera(38, width / height, 0.05, 30);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -51,6 +51,47 @@ function createPuntoToy(container, opts = {}) {
   shadowBlob.position.y = 0.002;
   scene.add(shadowBlob);
 
+  // ---------- orbit camera you can grab & spin (drag to rotate, flick for momentum) ----------
+  // radius/target start with rough defaults and get tightened up in frameToFit()
+  // once we know the real size of whatever ended up in the scene (real model or
+  // fallback) — that way the car (and its ground shadow) always stay fully inside
+  // the little widget no matter which way you spin it, instead of clipping at
+  // wide angles like a car stuck poking out of an invisible box.
+  let radius = 5.6;
+  let theta = Math.PI + 0.62; // azimuth (around Y) — starts on a front 3/4 view
+  let phi = 1.1;              // polar angle (0 = straight above, PI/2 = level with car)
+  const PHI_MIN = 0.55;
+  const PHI_MAX = 1.5;
+  const FRAME_MARGIN = 1.15; // headroom so the silhouette never touches the edges
+
+  function updateCameraFromSpherical() {
+    camera.position.set(
+      target.x + radius * Math.sin(phi) * Math.sin(theta),
+      target.y + radius * Math.cos(phi),
+      target.z + radius * Math.sin(phi) * Math.cos(theta),
+    );
+    camera.lookAt(target);
+  }
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  updateCameraFromSpherical();
+
+  // Re-centers the orbit target on the actual model's bounding sphere and backs
+  // the camera off just far enough that the sphere fits inside the vertical FOV
+  // at every angle — since the camera always stays `radius` away from `target`
+  // no matter how you drag it, this guarantees nothing pokes outside the frame,
+  // regardless of azimuth or pitch.
+  function frameToFit(group) {
+    const box = new THREE.Box3().setFromObject(group);
+    box.union(new THREE.Box3().setFromObject(shadowBlob));
+    const sphere = box.getBoundingSphere(new THREE.Sphere());
+    if (!sphere.radius || !isFinite(sphere.radius)) return;
+    target.copy(sphere.center);
+    const halfFovV = THREE.MathUtils.degToRad(camera.fov / 2);
+    radius = (sphere.radius / Math.sin(halfFovV)) * FRAME_MARGIN;
+    updateCameraFromSpherical();
+  }
+
   // ---------- the car — parked, still, just sitting there ----------
   const car = new THREE.Group();
   scene.add(car);
@@ -83,6 +124,7 @@ function createPuntoToy(container, opts = {}) {
           model.position.y -= box.min.y;
 
           target.add(model);
+          frameToFit(target);
           renderOnce();
         } catch (e) {
           console.warn('Falha ao montar o modelo 3D, usando carrinho simples.', e);
@@ -99,6 +141,7 @@ function createPuntoToy(container, opts = {}) {
 
   function useFallback(target) {
     target.add(buildFallbackCar());
+    frameToFit(target);
     renderOnce();
   }
 
@@ -193,25 +236,6 @@ function createPuntoToy(container, opts = {}) {
     grp.scale.setScalar(0.28);
     return grp;
   }
-
-  // ---------- orbit camera you can grab & spin (drag to rotate, flick for momentum) ----------
-  let radius = 5.6;
-  let theta = Math.PI + 0.62; // azimuth (around Y) — starts on a front 3/4 view
-  let phi = 1.1;              // polar angle (0 = straight above, PI/2 = level with car)
-  const PHI_MIN = 0.55;
-  const PHI_MAX = 1.5;
-
-  function updateCameraFromSpherical() {
-    camera.position.set(
-      target.x + radius * Math.sin(phi) * Math.sin(theta),
-      target.y + radius * Math.cos(phi),
-      target.z + radius * Math.sin(phi) * Math.cos(theta),
-    );
-    camera.lookAt(target);
-  }
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-  updateCameraFromSpherical();
 
   function renderOnce() {
     renderer.render(scene, camera);

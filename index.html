@@ -66,6 +66,13 @@
         <button class="btn btn-gold" id="btnGerarParcelas">🔄 Gerar / atualizar parcelas</button>
       </div>
 
+      <div class="card">
+        <div class="section-title">🧾 Boletos</div>
+        <div class="section-sub" id="boletosSub">Cole aqui os códigos (linha digitável) dos boletos do carnê, um por linha, no formato "nº do documento e código". Isso deixa cada parcela com um botão de copiar código pra pagar direto no app do seu banco.</div>
+        <textarea id="fBoletos" rows="4" placeholder="001 70790.00118 21154.691204 12512.613691 3 15960000123958&#10;002 70790.00118 21154.691204 12512.614012 8 16270000123958&#10;..." style="width:100%;box-sizing:border-box;font-family:monospace;font-size:12.5px;"></textarea>
+        <button class="btn btn-navy" id="btnImportarBoletos" style="margin-top:10px;">📥 Importar códigos</button>
+      </div>
+
       <div class="card" id="syncCard"></div>
     </div>
   </main>

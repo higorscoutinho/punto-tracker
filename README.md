@@ -15,8 +15,10 @@ Só duas páginas:
   sincronização entre aparelhos. O carrinho 3D fica sempre parado no canto
   da tela, decorativo.
 - **Pagamentos** (`pagamentos.html`) — lista das 36 parcelas. Clique em
-  "Marcar pago" pra quitar (fica pago na hora, sem confirmação extra) ou no
-  ícone da câmera pra anexar/ver o comprovante.
+  "Marcar pago" pra quitar (fica pago na hora, sem confirmação extra), no
+  ícone da câmera pra anexar/ver o comprovante, ou no ícone 🧾 pra ver/copiar
+  o código de barras (linha digitável) do boleto daquela parcela e colar
+  direto no app do banco.
 
 Os dados ficam salvos no `localStorage` do navegador. Se você quiser acessar
 do celular e do computador ao mesmo tempo, dá pra ligar uma sincronização
@@ -77,6 +79,12 @@ navegador antes de subir, mas ainda assim ocupa espaço no Gist. Se você
 anexar muitas fotos grandes, a sincronização fica mais lenta — nada quebra,
 só demora um pouco mais.
 
+**Sobre os códigos de boleto:** a linha digitável de cada parcela fica salva
+junto com o resto do carnê (mesmo Gist, se a sincronização estiver ligada).
+É só o código — nada de CPF, endereço ou o PDF do boleto em si. Pra importar
+várias de uma vez, cole no campo "🧾 Boletos" do Painel um código por linha,
+no formato `<nº da parcela> <código>` (ex: `001 70790.00118 ...`).
+
 **Sem sincronização:** se preferir não configurar nada, o site funciona
 normalmente, só que os dados ficam presos naquele navegador/aparelho. Dá pra
 usar o botão **Exportar backup** em Ajustes de vez em quando pra não perder
@@ -94,7 +102,9 @@ nada.
   do carnê: é só pra ser bonito. Clique e arraste (ou passe o dedo, no
   celular) pra girar a câmera ao redor dele e ver de outros ângulos; solte
   com um "flick" rápido e ele continua girando um pouco antes de parar,
-  feito um pião. Se o modelo não carregar por algum motivo, `js/car3d.js`
+  feito um pião. A câmera se ajusta sozinha ao tamanho real do modelo
+  (`frameToFit` em `js/car3d.js`) pra ele nunca ficar cortado, não importa o
+  ângulo. Se o modelo não carregar por algum motivo, `js/car3d.js`
   cai automaticamente num carrinho simples feito só de formas geométricas,
   pra nunca ficar sem o carrinho. Dá pra ajustar esse comportamento mexendo
   nesse arquivo (função `createPuntoToy`).
